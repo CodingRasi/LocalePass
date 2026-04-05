@@ -1,6 +1,6 @@
 {
   "name": "localepass",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Catch localization, visual regressions, and UI breakage before release.",
   "type": "module",
   "license": "MIT",

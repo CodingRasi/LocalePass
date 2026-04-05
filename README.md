@@ -1,163 +1,128 @@
-# LocalePass
+# LocalePass v0.9.1
 
-LocalePass is a CLI tool for checking localized web pages before release.
+Catch localization, visual regressions, and UI breakage before release.
 
-It helps you catch visual regressions, layout problems, and common localization mistakes across locales and viewports. You can run it locally while developing, or wire it into CI if you want repeatable checks on every change.
+LocalePass is a GitHub-first localization QA tool for web apps. It ships as a CLI and GitHub Action so teams can run checks in CI before they push broken localized UI live.
 
-The project is open source and still evolving. The goal is straightforward: make localization QA easier to run, easier to understand, and easier to automate.
+## What this repo is now
 
-## What it does
+This version is no longer just a scanner prototype. It includes:
 
-LocalePass can:
+- localization QA heuristics
+- visual snapshot regression checks
+- HTML, JSON, Markdown, and SARIF outputs
+- snapshot update flow for PR and release pipelines
+- authenticated scans via Playwright `storageState`
+- GitHub Action wrapper and CI/release workflows
+- Docker support
+- JSON Schema for editor validation
 
-- open real pages in a browser
-- capture screenshots for each page, locale, and viewport
-- compare current screenshots against saved baseline snapshots
-- generate visual diffs when something changes
-- report possible layout and localization issues
-- export results as HTML, JSON, Markdown, and SARIF
-- run locally or in CI
+## Core capabilities
 
-Current checks include:
+### Localization QA
+- untranslated string detection against a baseline locale
+- text overflow and clipping detection
+- missing `html[lang]` detection
+- RTL suspicion detection
 
-- visual snapshot regression
-- text overflow and clipping heuristics
-- missing `html[lang]`
-- possible untranslated strings compared to a baseline locale
-- possible RTL-related issues
+### Visual regression
+- screenshot capture per page, locale, and viewport
+- baseline snapshot comparison using ImageMagick
+- diff image generation
+- configurable mismatch thresholds
+- snapshot refresh mode
 
-## What it is for
+### CI outputs
+- HTML report for humans
+- JSON summary for automation
+- Markdown summary for PR comments or Slack
+- SARIF output for code-scanning style ingestion
+- GitHub step summary output when running in Actions
 
-LocalePass is built for browser-accessible products such as:
+## Quick start
 
-- websites
-- web apps
-- dashboards
-- signup and onboarding flows
-- pricing and billing pages
-- documentation sites
-- admin panels
-- localized marketing pages
+## Fastest way to see what it does
 
-It is **not** a native iOS or Android UI testing framework. Right now, it is focused on web surfaces.
-
-## Install
-
-```bash
-npm install
-npx playwright install chromium
-npm run build
-````
-
-If you want to use the command directly from your terminal:
-
-```bash
-npm link
-```
-
-Then you can run:
-
-```bash
-localepass scan example.com
-```
-
-## Quick examples
-
-Scan a public page:
-
-```bash
-localepass scan nasa.com
-```
-
-Scan a specific page:
-
-```bash
-localepass scan example.com/pricing
-```
-
-Scan a localized route pattern:
-
-```bash
-localepass scan "example.com/{locale}/pricing" --locales en,de,fr
-```
-
-Scan using a config file:
-
-```bash
-localepass scan --config localepass.config.json
-```
-
-## How it works
-
-LocalePass has two main workflows.
-
-### 1. Ad hoc scan
-
-Use this when you want to quickly inspect a public page or route.
-
-```bash
-localepass scan lent.az
-```
-
-### 2. Baseline comparison
-
-Use this when you want repeatable regression checks.
-
-First create or refresh snapshots:
-
-```bash
-localepass scan --config localepass.config.json --update-snapshots --no-fail-on-issues
-```
-
-Then run future comparisons against those snapshots:
-
-```bash
-localepass scan --config localepass.config.json
-```
-
-## Reports
-
-LocalePass writes reports to a report directory and snapshots to a snapshot directory.
-
-Typical outputs include:
-
-* `report.html`
-* `summary.json`
-* `summary.md`
-* `summary.sarif.json`
-
-The HTML report is meant for humans.
-JSON and SARIF are there for automation and CI tooling.
-
-## Demo
-
-The repository includes a small demo site so you can try the full workflow locally.
-
-Start the demo site from the repository root:
+Start the demo site:
 
 ```bash
 python3 -m http.server 3000
 ```
 
-Then create baseline snapshots:
+In another terminal, run the quick baseline once:
 
 ```bash
+npm run build
 npm run test:demo:quick:update-snapshots
 ```
 
-Then run the comparison:
+Then run the quick comparison:
 
 ```bash
 npm run test:demo:quick
 ```
 
-The quick demo uses a lighter setup so you can see the tool without waiting too long.
+This quick mode is the best first impression because it:
+- uses one viewport instead of two
+- opens the HTML report automatically
+- prints the top issues and suggested fixes directly in the terminal
+- still generates screenshots, diffs, and machine-readable artifacts
 
-## Configuration
+The full demo is still available:
 
-For repeated checks, use a config file.
+```bash
+npm run test:demo:update-snapshots
+npm run test:demo
+```
 
-Example:
+
+```bash
+npm install
+npx playwright install --with-deps chromium
+npm run build
+node dist/packages/cli/src/index.js scan --config localepass.config.json
+```
+
+Generated artifacts land in:
+
+```bash
+reports/localepass/
+```
+
+## CLI usage
+
+```bash
+localepass scan --config localepass.config.json --format html,json,markdown,sarif
+```
+
+Useful options:
+
+- `--config <path>`: config file path
+- `--output-dir <path>`: override output directory
+- `--snapshot-dir <path>`: override snapshot directory
+- `--format <list>`: comma-separated `html,json,markdown,sarif`
+- `--clean`: remove the output directory before scanning
+- `--update-snapshots`: replace the baseline snapshots with the current screenshots
+- `--no-fail-on-issues`: exit with code 0 even if issues are found
+- `--open-report`: open the HTML report automatically
+- `--terminal-report`: print the top issues and fix hints directly in the terminal
+- `--concurrency <n>`: run locale scans in parallel per page and viewport
+
+## Recommended pipeline
+
+### 1. Establish baselines
+
+```bash
+localepass scan --config localepass.config.json --update-snapshots --no-fail-on-issues
+```
+
+### 2. Compare future runs against snapshots
+
+```bash
+localepass scan --config localepass.config.json
+```
+
+## Config example
 
 ```json
 {
@@ -179,30 +144,29 @@ Example:
 }
 ```
 
-## Useful CLI options
+## Demo locally
 
-* `--config <path>` — use a config file
-* `--update-snapshots` — replace baseline snapshots with current screenshots
-* `--no-fail-on-issues` — exit successfully even if findings are reported
-* `--open-report` — open the HTML report automatically after the scan
-* `--terminal-report` — print a summary of findings directly in the terminal
-* `--concurrency <n>` — control how many scan jobs run in parallel
+The repo includes a static demo site and matching config.
 
-## Authenticated scans
+Start a local file server from the repo root:
 
-If your app requires login, you can provide a Playwright storage state file and reuse an authenticated browser session.
+```bash
+python3 -m http.server 3000
+```
 
-Typical flow:
+Then create snapshots:
 
-* log in once with Playwright
-* save `storageState` to a file
-* point LocalePass to that file in your config
+```bash
+npm run test:demo:update-snapshots
+```
+
+Then run a comparison scan:
+
+```bash
+npm run test:demo
+```
 
 ## GitHub Action
-
-LocalePass can also run in GitHub Actions.
-
-Example workflow:
 
 ```yaml
 name: LocalePass
@@ -215,7 +179,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./
+      - uses: ./. 
         with:
           config: localepass.config.json
           format: html,json,markdown,sarif
@@ -223,56 +187,77 @@ jobs:
           fail-on-issues: 'true'
 ```
 
+To refresh snapshots on demand:
+
+```yaml
+- uses: ./. 
+  with:
+    config: localepass.config.json
+    update-snapshots: 'true'
+    fail-on-issues: 'false'
+```
+
 ## Docker
 
 Build:
 
 ```bash
-docker build -t localepass:1.0 .
+docker build -t localepass:0.9 .
 ```
 
 Run:
 
 ```bash
-docker run --rm -v "$PWD":/work -w /work localepass:1.0 scan --config localepass.config.json
+docker run --rm \
+  -v "$PWD":/work \
+  -w /work \
+  localepass:0.9 \
+  scan --config localepass.config.json
 ```
 
-## Project status
+## Authenticated scans
 
-LocalePass is usable today, but it is still growing.
+Create Playwright storage state once and point the config to it.
 
-Some parts are already solid, especially screenshot capture, baseline comparison, and report generation. Some heuristics still need tuning, especially on noisy public websites with dynamic content, carousels, tickers, ads, or frequently changing homepages.
+Example concept:
 
-So if you use the tool and run into false positives, rough edges, or confusing output, please open an issue. That kind of feedback is exactly what makes the project better.
+```ts
+import { chromium } from 'playwright';
 
-## Contributing
+const browser = await chromium.launch();
+const page = await browser.newPage();
+await page.goto('https://example.com/login');
+// perform login
+await page.context().storageState({ path: '.auth/localepass-storage-state.json' });
+await browser.close();
+```
 
-Contributions are welcome.
+## What still belongs in the paid layer later
 
-Good areas to improve:
+This repo is now solid for open-source distribution, but the monetizable layer later should be:
 
-* better issue precision
-* fewer false positives
-* better report UX
-* stronger terminal output
-* more stable handling of dynamic pages
-* better fixture coverage and tests
-* docs and real-world examples
+- hosted run history
+- PR comments and triage workflow
+- Slack/Jira sync
+- multi-project workspaces
+- flaky-diff suppression and approvals
+- branch preview auto-discovery
+- team roles and audit trail
 
-A good place to start is simple:
+## Publishing checklist
 
-1. run the demo
-2. try the tool on a real site
-3. find something noisy, confusing, or broken
-4. open an issue or send a pull request
-
-## Philosophy
-
-LocalePass is meant to be practical.
-
-Not a giant platform.
-Not a black box.
-Just a tool that helps developers catch broken localized UI before users do.
+1. Replace GitHub URLs in `package.json`
+2. Add your npm scope if needed
+3. Create `NPM_TOKEN` in GitHub Actions secrets
+4. Run `npm pack`
+5. Smoke-test the tarball in a clean directory
+6. Publish with `npm publish --access public`
 
 ## License
+
 MIT
+
+
+## Support message
+
+Set `report.supportMessage` in your config to show a custom thank-you / fork / donation message in the terminal and reports.

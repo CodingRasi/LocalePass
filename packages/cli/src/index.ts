@@ -184,7 +184,7 @@ interface EvaluateArgs {
   minTextLengthForTranslationCheck: number;
 }
 
-const TOOL_VERSION = '1.0.0';
+const TOOL_VERSION = '1.0.1';
 const DEFAULT_VIEWPORTS: ViewportSpec[] = [
   { name: 'desktop', width: 1440, height: 1024 },
   { name: 'mobile', width: 390, height: 844, deviceScaleFactor: 2 }
@@ -208,7 +208,7 @@ program
   .option('-c, --config <path>', 'Config file path')
   .option('--url <url>', 'Scan a single URL, domain, or a URL pattern like example.com/{locale}/pricing')
   .option('--name <name>', 'Page name for ad hoc scans', 'page')
-  .option('--locales <codes>', 'Comma-separated locale codes for ad hoc scans', 'en')
+  .option('--locales <codes>', 'Comma-separated locale codes for ad hoc scans, or auto', 'auto')
   .option('--baseline-locale <code>', 'Baseline locale for translation comparisons', 'en')
   .option('--viewport <preset>', 'Viewport preset for ad hoc scans: desktop,mobile', 'desktop')
   .option('-o, --output-dir <path>', 'Override output directory')
@@ -225,7 +225,7 @@ program
     const formats = parseFormats(options.format);
     const isAdhoc = Boolean(target || options.url);
     const config = isAdhoc
-      ? buildAdhocConfig(target ?? options.url!, options, formats)
+      ? await buildAdhocConfig(target ?? options.url!, options, formats)
       : await loadConfig(options.config ?? 'localepass.config.json', options.outputDir, options.snapshotDir, formats, options.clean);
     if (options.openReport || isAdhoc) config.report = { ...config.report, autoOpen: true };
     if (options.terminalReport || isAdhoc) config.report = { ...config.report, terminalSummary: true };
@@ -289,14 +289,18 @@ function parseFormats(input: string): Array<'html' | 'json' | 'markdown' | 'sari
 }
 
 
-function buildAdhocConfig(
+async function buildAdhocConfig(
   targetUrl: string,
   options: ScanCommandOptions,
   formats: Array<'html' | 'json' | 'markdown' | 'sarif'>
-): ScanConfig {
-  const localeCodes = parseLocaleCodes(options.locales ?? 'en');
-  const normalizedTargetUrl = normalizeTargetUrl(targetUrl, localeCodes[0] ?? 'en');
-  const baselineLocale = options.baselineLocale ?? localeCodes[0] ?? 'en';
+): Promise<ScanConfig> {
+  const requestedLocales = (options.locales ?? 'auto').trim();
+  const initialSampleLocale = options.baselineLocale ?? 'en';
+  const normalizedTargetUrl = normalizeTargetUrl(targetUrl, initialSampleLocale);
+  const localeCodes = isAutoLocaleMode(requestedLocales)
+    ? await discoverLocalesForTarget(normalizedTargetUrl, initialSampleLocale)
+    : parseLocaleCodes(requestedLocales);
+  const baselineLocale = options.baselineLocale ?? localeCodes[0] ?? initialSampleLocale;
   const locales: LocaleSpec[] = localeCodes.map((code) => ({ name: code, code }));
   const reportName = sanitizeName(options.name ?? inferNameFromUrl(normalizedTargetUrl));
   const viewport = options.viewport === 'mobile'
@@ -355,6 +359,92 @@ function buildAdhocConfig(
 function parseLocaleCodes(input: string): string[] {
   const codes = input.split(',').map((part) => part.trim()).filter(Boolean);
   return Array.from(new Set(codes.length ? codes : ['en']));
+}
+
+
+function isAutoLocaleMode(input: string): boolean {
+  return !input || input.trim().toLowerCase() === 'auto';
+}
+
+async function discoverLocalesForTarget(targetUrl: string, fallbackLocale: string): Promise<string[]> {
+  const normalized = normalizeLocaleCode(fallbackLocale) || 'en';
+  const urlForDiscovery = targetUrl.includes('{locale}') ? targetUrl.replace('{locale}', normalized) : targetUrl;
+  const discovered = new Set<string>();
+
+  try {
+    const browser = await chromium.launch({ headless: true, executablePath: await detectChromiumExecutable() });
+    try {
+      const page = await browser.newPage();
+      await page.goto(urlForDiscovery, { waitUntil: 'domcontentloaded', timeout: 12000 });
+      const localeCandidates = await page.evaluate(() => {
+        const values = new Set<string>();
+        const push = (value: string | null | undefined) => {
+          if (!value) return;
+          const trimmed = value.trim();
+          if (!trimmed) return;
+          values.add(trimmed);
+        };
+
+        push(document.documentElement.getAttribute('lang'));
+        document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((node) => push(node.getAttribute('hreflang')));
+        document.querySelectorAll('[lang]').forEach((node) => push(node.getAttribute('lang')));
+        document.querySelectorAll('[hreflang]').forEach((node) => push(node.getAttribute('hreflang')));
+        document.querySelectorAll('[data-lang],[data-locale],[lang-code],[locale]').forEach((node) => {
+          push(node.getAttribute('data-lang'));
+          push(node.getAttribute('data-locale'));
+          push(node.getAttribute('lang-code'));
+          push(node.getAttribute('locale'));
+        });
+
+        document.querySelectorAll('a[href], link[href]').forEach((node) => {
+          const href = node.getAttribute('href') || '';
+          const text = (node.textContent || '').trim();
+          const patterns = [
+            href.match(/[?&#](?:lang|locale)=([a-zA-Z-]{2,10})/),
+            href.match(/\/([a-zA-Z]{2}(?:-[a-zA-Z]{2})?)\/(?:$|[^a-zA-Z])/),
+            text.match(/^([a-zA-Z]{2}(?:-[a-zA-Z]{2})?)$/)
+          ];
+          for (const match of patterns) {
+            if (match && match[1]) push(match[1]);
+          }
+        });
+
+        return Array.from(values);
+      });
+
+      for (const candidate of localeCandidates) {
+        const code = normalizeLocaleCode(candidate);
+        if (code) discovered.add(code);
+      }
+    } finally {
+      await browser.close();
+    }
+  } catch {
+    // fall through to safe fallback
+  }
+
+  if (!discovered.size) {
+    discovered.add(normalized);
+  }
+
+  const prioritized = Array.from(discovered).sort((a, b) => {
+    if (a === normalized) return -1;
+    if (b === normalized) return 1;
+    return a.localeCompare(b);
+  });
+
+  return prioritized;
+}
+
+function normalizeLocaleCode(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const cleaned = value.trim().replace('_', '-');
+  if (!cleaned || cleaned === '*' || /^x-default$/i.test(cleaned)) return null;
+  const match = cleaned.match(/^([a-zA-Z]{2,3})(?:-([a-zA-Z]{2}))?/);
+  if (!match) return null;
+  const language = match[1].toLowerCase();
+  const region = match[2] ? match[2].toUpperCase() : '';
+  return region ? `${language}-${region}` : language;
 }
 
 function normalizeTargetUrl(value: string, sampleLocale: string): string {
