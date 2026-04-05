@@ -132,6 +132,10 @@ Typical outputs include:
 The HTML report is meant for humans.
 JSON and SARIF are there for automation and CI tooling.
 
+Here you can see an example scan of https://tesla.com/
+
+<img width="800" height="500" alt="Screenshot 2026-04-05 at 13 36 52" src="https://github.com/user-attachments/assets/e6ed0ff3-4d8f-475b-b92b-4545b3a232cd" />
+
 ## Demo
 
 The repository includes a small demo site so you can try the full workflow locally.
