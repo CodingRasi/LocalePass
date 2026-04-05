@@ -6,9 +6,7 @@ Catch localization, visual regressions, and UI breakage before release.
 
 LocalePass is a GitHub-first localization QA tool for web apps. It ships as a CLI and GitHub Action so teams can run checks in CI before they push broken localized UI live.
 
-## What this repo is now
-
-This version is no longer just a scanner prototype. It includes:
+## What it includes?
 
 - localization QA heuristics
 - visual snapshot regression checks
@@ -40,8 +38,6 @@ This version is no longer just a scanner prototype. It includes:
 - Markdown summary for PR comments or Slack
 - SARIF output for code-scanning style ingestion
 - GitHub step summary output when running in Actions
-
-## Quick start
 
 ## Fastest way to see what it does
 
