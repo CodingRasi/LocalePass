@@ -1,3 +1,6 @@
+
+<img width="1536" height="1024" alt="LocalePass_logo" src="https://github.com/user-attachments/assets/40010cca-f27c-4bf0-9177-6b7cdf3e32ee" />
+
 # LocalePass
 
 LocalePass is a CLI tool for checking localized web pages before release.
