@@ -234,27 +234,6 @@ await page.context().storageState({ path: '.auth/localepass-storage-state.json' 
 await browser.close();
 ```
 
-## What still belongs in the paid layer later
-
-This repo is now solid for open-source distribution, but the monetizable layer later should be:
-
-- hosted run history
-- PR comments and triage workflow
-- Slack/Jira sync
-- multi-project workspaces
-- flaky-diff suppression and approvals
-- branch preview auto-discovery
-- team roles and audit trail
-
-## Publishing checklist
-
-1. Replace GitHub URLs in `package.json`
-2. Add your npm scope if needed
-3. Create `NPM_TOKEN` in GitHub Actions secrets
-4. Run `npm pack`
-5. Smoke-test the tarball in a clean directory
-6. Publish with `npm publish --access public`
-
 ## License
 
 MIT
