@@ -1,5 +1,5 @@
 
-<img width="900" height="600" alt="LocalePass_logo" src="https://github.com/user-attachments/assets/40010cca-f27c-4bf0-9177-6b7cdf3e32ee" />
+<img width="600" height="400" alt="LocalePass_logo" src="https://github.com/user-attachments/assets/40010cca-f27c-4bf0-9177-6b7cdf3e32ee" />
 
 # LocalePass
 
