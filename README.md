@@ -1,4 +1,4 @@
-# LocalePass v0.9.1
+# LocalePass v1.0.1.
 
 Catch localization, visual regressions, and UI breakage before release.
 
