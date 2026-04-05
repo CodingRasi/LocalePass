@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/localepass.schema.json",
+  "title": "LocalePass Config",
+  "type": "object",
+  "required": [
+    "baselineLocale",
+    "pages",
+    "locales"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "baseUrl": {
+      "type": "string"
+    },
+    "baselineLocale": {
+      "type": "string"
+    },
+    "outputDir": {
+      "type": "string"
+    },
+    "cleanOutputDir": {
+      "type": "boolean"
+    },
+    "auth": {
+      "type": "object",
+      "properties": {
+        "storageStatePath": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "browser": {
+      "type": "object",
+      "properties": {
+        "headless": {
+          "type": "boolean"
+        },
+        "timeoutMs": {
+          "type": "number"
+        },
+        "waitUntil": {
+          "type": "string",
+          "enum": [
+            "load",
+            "domcontentloaded",
+            "networkidle",
+            "commit"
+          ]
+        },
+        "concurrency": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "report": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "includeHtml": {
+          "type": "boolean"
+        },
+        "includeJson": {
+          "type": "boolean"
+        },
+        "includeMarkdown": {
+          "type": "boolean"
+        },
+        "includeSarif": {
+          "type": "boolean"
+        },
+        "autoOpen": {
+          "type": "boolean"
+        },
+        "terminalSummary": {
+          "type": "boolean"
+        },
+        "maxIssuesInTerminal": {
+          "type": "number"
+        },
+        "supportMessage": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ignore": {
+      "type": "object",
+      "properties": {
+        "selectors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "textPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "url"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "waitFor": {
+            "type": "number"
+          },
+          "waitForSelector": {
+            "type": "string"
+          },
+          "selectorsToIgnore": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "textPatternsToIgnore": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "snapshotKey": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "locales": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "code"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "cookies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "value",
+                "domain"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                },
+                "domain": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "viewports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "width",
+          "height"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "deviceScaleFactor": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "visualDiff": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "snapshotDir": {
+          "type": "string"
+        },
+        "diffDir": {
+          "type": "string"
+        },
+        "compareAgainstSnapshots": {
+          "type": "boolean"
+        },
+        "generateDiffImages": {
+          "type": "boolean"
+        },
+        "failOnMissingSnapshots": {
+          "type": "boolean"
+        },
+        "allowedMismatchPixels": {
+          "type": "number"
+        },
+        "allowedMismatchRatio": {
+          "type": "number"
+        },
+        "fullPage": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "thresholds": {
+      "type": "object",
+      "properties": {
+        "untranslatedOverlapRatio": {
+          "type": "number"
+        },
+        "untranslatedCorpusMatchRatio": {
+          "type": "number"
+        },
+        "overflowPixels": {
+          "type": "number"
+        },
+        "maxTextExpansionRatio": {
+          "type": "number"
+        },
+        "minTextLengthForTranslationCheck": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

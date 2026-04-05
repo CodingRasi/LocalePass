@@ -1,0 +1,16 @@
+name: LocalePass
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./. 
+        with:
+          config: localepass.config.json
+          format: html,json,markdown,sarif
+          fail-on-issues: 'true'

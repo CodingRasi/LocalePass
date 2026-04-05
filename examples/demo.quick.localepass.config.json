@@ -1,0 +1,95 @@
+{
+  "$schema": "../localepass.schema.json",
+  "baseUrl": "http://127.0.0.1:3000/examples/demo-site",
+  "baselineLocale": "en",
+  "outputDir": "reports/demo-localepass",
+  "cleanOutputDir": true,
+  "browser": {
+    "headless": true,
+    "timeoutMs": 12000,
+    "waitUntil": "load",
+    "concurrency": 6
+  },
+  "report": {
+    "title": "LocalePass Quick Demo Report",
+    "includeHtml": true,
+    "includeJson": true,
+    "includeMarkdown": true,
+    "includeSarif": true,
+    "autoOpen": true,
+    "terminalSummary": true,
+    "maxIssuesInTerminal": 10,
+    "supportMessage": "Fork the repo on CodingRasi and donate at https://buymeacoffee.com/mammadowr8 if LocalePass helps you."
+  },
+  "ignore": {
+    "selectors": [
+      "script",
+      "style"
+    ],
+    "textPatterns": [
+      "^\\d+$"
+    ]
+  },
+  "visualDiff": {
+    "enabled": true,
+    "snapshotDir": ".localepass/demo-snapshots",
+    "diffDir": "artifacts/diffs",
+    "compareAgainstSnapshots": true,
+    "generateDiffImages": true,
+    "failOnMissingSnapshots": false,
+    "allowedMismatchPixels": 100,
+    "allowedMismatchRatio": 0.001,
+    "fullPage": false
+  },
+  "pages": [
+    {
+      "name": "landing",
+      "url": "/{locale}/index.html",
+      "waitFor": 20,
+      "waitForSelector": "main"
+    },
+    {
+      "name": "pricing",
+      "url": "/{locale}/pricing.html",
+      "waitFor": 20,
+      "waitForSelector": "main"
+    }
+  ],
+  "locales": [
+    {
+      "name": "English",
+      "code": "en",
+      "headers": {
+        "Accept-Language": "en"
+      }
+    },
+    {
+      "name": "German",
+      "code": "de",
+      "headers": {
+        "Accept-Language": "de"
+      }
+    },
+    {
+      "name": "Japanese",
+      "code": "ja",
+      "headers": {
+        "Accept-Language": "ja"
+      }
+    }
+  ],
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1280,
+      "height": 900
+    }
+  ],
+  "thresholds": {
+    "untranslatedOverlapRatio": 0.8,
+    "untranslatedCorpusMatchRatio": 0.35,
+    "overflowPixels": 2,
+    "maxTextExpansionRatio": 1.35,
+    "minTextLengthForTranslationCheck": 5
+  }
+}

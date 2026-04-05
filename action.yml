@@ -1,0 +1,66 @@
+name: 'LocalePass Scan'
+description: 'Catch localization, visual regressions, and UI breakage before release.'
+author: 'Fisy'
+inputs:
+  config:
+    description: 'Path to localepass config file'
+    required: false
+    default: 'localepass.config.json'
+  format:
+    description: 'Comma-separated output formats: html,json,markdown,sarif'
+    required: false
+    default: 'html,json,markdown,sarif'
+  output-dir:
+    description: 'Override output directory'
+    required: false
+    default: 'reports/localepass'
+  snapshot-dir:
+    description: 'Override snapshot directory'
+    required: false
+    default: '.localepass/snapshots'
+  update-snapshots:
+    description: 'Refresh baseline snapshots instead of comparing against them'
+    required: false
+    default: 'false'
+  node-version:
+    description: 'Node.js version'
+    required: false
+    default: '20'
+  fail-on-issues:
+    description: 'Fail the action if issues are found'
+    required: false
+    default: 'true'
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+    - name: Install Playwright browser
+      shell: bash
+      run: npx playwright install --with-deps chromium
+    - name: Build LocalePass
+      shell: bash
+      run: npm run build
+    - name: Run LocalePass
+      shell: bash
+      run: |
+        ARGS=(scan --config "${{ inputs.config }}" --format "${{ inputs.format }}" --output-dir "${{ inputs.output-dir }}" --snapshot-dir "${{ inputs.snapshot-dir }}")
+        if [ "${{ inputs.fail-on-issues }}" = "false" ]; then
+          ARGS+=(--no-fail-on-issues)
+        fi
+        if [ "${{ inputs.update-snapshots }}" = "true" ]; then
+          ARGS+=(--update-snapshots)
+        fi
+        node dist/packages/cli/src/index.js "${ARGS[@]}"
+    - name: Upload report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: localepass-report
+        path: ${{ inputs.output-dir }}

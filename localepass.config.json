@@ -1,0 +1,68 @@
+{
+  "$schema": "./localepass.schema.json",
+  "baseUrl": "http://localhost:3000",
+  "baselineLocale": "en",
+  "outputDir": "reports/localepass",
+  "cleanOutputDir": true,
+  "auth": {
+    "storageStatePath": ".auth/localepass-storage-state.json"
+  },
+  "browser": {
+    "headless": true,
+    "timeoutMs": 60000
+  },
+  "report": {
+    "title": "LocalePass Report",
+    "includeHtml": true,
+    "includeJson": true,
+    "includeMarkdown": true,
+    "includeSarif": true
+  },
+  "ignore": {
+    "selectors": ["[data-localepass-ignore]", ".cookie-banner", "script", "style"],
+    "textPatterns": ["^\\d+$"]
+  },
+  "visualDiff": {
+    "enabled": true,
+    "snapshotDir": ".localepass/snapshots",
+    "diffDir": "artifacts/diffs",
+    "compareAgainstSnapshots": true,
+    "generateDiffImages": true,
+    "failOnMissingSnapshots": false,
+    "allowedMismatchPixels": 100,
+    "allowedMismatchRatio": 0.001,
+    "fullPage": true
+  },
+  "pages": [
+    {
+      "name": "landing",
+      "url": "/{locale}/",
+      "waitFor": 500,
+      "waitForSelector": "main",
+      "selectorsToIgnore": ["[data-localepass-ignore]"],
+      "textPatternsToIgnore": ["^v\\d+\\.\\d+"]
+    },
+    {
+      "name": "pricing",
+      "url": "/{locale}/pricing",
+      "waitFor": 500,
+      "waitForSelector": "main"
+    }
+  ],
+  "locales": [
+    { "name": "English", "code": "en", "headers": { "Accept-Language": "en" } },
+    { "name": "German", "code": "de", "headers": { "Accept-Language": "de" } },
+    { "name": "Japanese", "code": "ja", "headers": { "Accept-Language": "ja" } }
+  ],
+  "viewports": [
+    { "name": "desktop", "width": 1440, "height": 1024 },
+    { "name": "mobile", "width": 390, "height": 844, "deviceScaleFactor": 2 }
+  ],
+  "thresholds": {
+    "untranslatedOverlapRatio": 0.8,
+    "untranslatedCorpusMatchRatio": 0.35,
+    "overflowPixels": 2,
+    "maxTextExpansionRatio": 1.35,
+    "minTextLengthForTranslationCheck": 5
+  }
+}
