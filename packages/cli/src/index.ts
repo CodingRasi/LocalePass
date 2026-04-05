@@ -294,14 +294,33 @@ async function buildAdhocConfig(
   options: ScanCommandOptions,
   formats: Array<'html' | 'json' | 'markdown' | 'sarif'>
 ): Promise<ScanConfig> {
-  const requestedLocales = (options.locales ?? 'auto').trim();
-  const initialSampleLocale = options.baselineLocale ?? 'en';
-  const normalizedTargetUrl = normalizeTargetUrl(targetUrl, initialSampleLocale);
-  const localeCodes = isAutoLocaleMode(requestedLocales)
-    ? await discoverLocalesForTarget(normalizedTargetUrl, initialSampleLocale)
-    : parseLocaleCodes(requestedLocales);
-  const baselineLocale = options.baselineLocale ?? localeCodes[0] ?? initialSampleLocale;
-  const locales: LocaleSpec[] = localeCodes.map((code) => ({ name: code, code }));
+ const requestedLocales = (options.locales ?? 'auto').trim();
+ const initialSampleLocale = options.baselineLocale ?? 'en';
+ const normalizedTargetUrl = normalizeTargetUrl(targetUrl, initialSampleLocale);
+
+ const localeCodes = isAutoLocaleMode(requestedLocales)
+  ? await discoverLocalesForTarget(normalizedTargetUrl, initialSampleLocale)
+  : parseLocaleCodes(requestedLocales);
+
+  const discoveredLocales = localeCodes.length ? localeCodes : [initialSampleLocale];
+
+  let baselineLocale: string;
+
+  if (options.baselineLocale && discoveredLocales.includes(options.baselineLocale)) {
+      baselineLocale = options.baselineLocale;
+    } else {
+      baselineLocale = discoveredLocales[0];
+    }
+    
+    if (options.baselineLocale && !discoveredLocales.includes(options.baselineLocale)) {
+      console.warn(
+        chalk.yellow(
+          `Requested baseline locale "${options.baselineLocale}" was not discovered. Falling back to "${baselineLocale}".`
+        )
+      );
+    }
+
+const locales: LocaleSpec[] = discoveredLocales.map((code) => ({ name: code, code }));
   const reportName = sanitizeName(options.name ?? inferNameFromUrl(normalizedTargetUrl));
   const viewport = options.viewport === 'mobile'
     ? [{ name: 'mobile', width: 390, height: 844, deviceScaleFactor: 2 }]
