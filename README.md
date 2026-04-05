@@ -1,4 +1,6 @@
-# LocalePass v0.9.1
+<img width="900" height="600" alt="LocalePass_logo" src="https://github.com/user-attachments/assets/40010cca-f27c-4bf0-9177-6b7cdf3e32ee" />
+
+# LocalePass v1.0.2.
 
 Catch localization, visual regressions, and UI breakage before release.
 
@@ -256,8 +258,3 @@ This repo is now solid for open-source distribution, but the monetizable layer l
 ## License
 
 MIT
-
-
-## Support message
-
-Set `report.supportMessage` in your config to show a custom thank-you / fork / donation message in the terminal and reports.
